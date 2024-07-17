@@ -1,4 +1,5 @@
 import scapy.all as scapy
+import ifcfg
 
 def scan(ip):
     arp_req_frame = scapy.ARP(pdst = ip)
@@ -14,5 +15,24 @@ def scan(ip):
         result.append(client_dict)
 
     return result
+
+def get_system_net(): # devuelve ip + mask format 192.168.1.0/24
+    nets_dict = {}
+    for name, interface in ifcfg.interfaces().items():
+        # Obtiene el nombre del dispositivo
+        device_name = interface['device']
+        # Obtiene la dirección IPv4 y la máscara de red
+        ip_address = interface.get('inet')
+        netmask = interface.get('netmask')
+        if ip_address and netmask:
+            # Convierte la máscara de red en formato de sufijo CIDR
+            cidr_suffix = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+            # Forma la dirección en el formato requerido
+            ip_with_mask = f"{ip_address}/{cidr_suffix}"
+            nets_dict[device_name] = ip_with_mask
+    
+    return nets_dict
+
 if __name__=="__main__":
-    print(scan("192.168.100.1"))
+    ip = get_system_net()
+    print(ip)
