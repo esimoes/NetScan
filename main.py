@@ -1,10 +1,16 @@
 import scapy.all as scapy
 import ifcfg
 
-def scan_net(ip):
-    ip=scapy.IP(dst=ip)
-    for p in ip:
-        print(p)
+def scan_net(ip_range):
+    try:
+        ip = scapy.IP(dst=ip_range)
+        for p in ip:
+            result = scapy.send(p/scapy.ICMP(), verbose=False)
+            print(result)
+    except PermissionError as e:
+        print(f"Permission error: {e}. Try running the script as an administrator.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def scan(ip):
     arp_req_frame = scapy.ARP(pdst = ip)
