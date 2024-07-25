@@ -1,5 +1,6 @@
 import scapy.all as scapy
-import ifcfg
+
+from utils.ipcfg import get_ipconfig_data
 
 def scan_net(ip_range):
     try:
@@ -11,6 +12,16 @@ def scan_net(ip_range):
         print(f"Permission error: {e}. Try running the script as an administrator.")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+def parse_ip_netmask(ip_address, netmask): # devuelve ip + mask format 192.168.1.0/24
+    if "/" in netmask:
+        cidr_suffix = netmask.split('/')[-1]
+    else:
+        cidr_suffix = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+    # Forma la dirección en el formato requerido
+    ip_with_mask = f"{ip_address}/{cidr_suffix}"
+    
+    return ip_with_mask
 
 def scan(ip):
     arp_req_frame = scapy.ARP(pdst = ip)
@@ -27,26 +38,10 @@ def scan(ip):
 
     return result
 
-def get_system_net(): # devuelve ip + mask format 192.168.1.0/24
-    nets_dict = {}
-    for name, interface in ifcfg.interfaces().items():
-        # Obtiene el nombre del dispositivo
-        device_name = interface['device']
-        # Obtiene la dirección IPv4 y la máscara de red
-        ip_address = interface.get('inet')
-        netmask = interface.get('netmask')
-        if ip_address and netmask:
-            # Convierte la máscara de red en formato de sufijo CIDR
-            if "/" in netmask:
-                cidr_suffix = netmask.split('/')[-1]
-            else:
-                cidr_suffix = sum(bin(int(x)).count('1') for x in netmask.split('.'))
-            # Forma la dirección en el formato requerido
-            ip_with_mask = f"{ip_address}/{cidr_suffix}"
-            nets_dict[device_name] = ip_with_mask
-    
-    return nets_dict
-
 if __name__=="__main__":
-    ip = get_system_net()
-    scan_net('192.168.100.0/24')
+    ip_dict = get_ipconfig_data()
+    ip_device = next(iter(ip_dict))
+    ip_dict = ip_dict[ip_device]
+    ip = parse_ip_netmask(ip_dict["inet4"],ip_dict["netmask"])
+
+    scan_net(ip)
