@@ -1,2 +1,2 @@
 scapy==2.5.0
-ifcfg==0.24
+python-nmap=0.7.1
