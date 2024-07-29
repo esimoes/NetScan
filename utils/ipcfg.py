@@ -3,16 +3,32 @@ import re
 import locale
 
 def get_regex_lng():
-    lang = locale.getdefaultlocale()
-    encoder = lang[1]
+    code_page_to_encoding = {
+    "437": "cp437",
+    "850": "cp850",
+    "852": "cp852",
+    "1252": "cp1252",
+    "65001": "utf-8"
+    }
+    cmd_language = ""
+    encoder = ""
     try:
         result = subprocess.run(
             ["powershell", "-Command", "[CultureInfo]::InstalledUICulture.Name"],
             capture_output=True,
-            text=True
+            text=True,
         )
         cmd_language = result.stdout.strip()
-        print(f"Idioma de la consola: {cmd_language}")
+        result = subprocess.run(
+            ["chcp"],
+            capture_output=True,
+            text=True,
+            shell=True
+        )
+        output = result.stdout.strip()
+        code_page = output.split(':')[-1].strip()
+        encoder = code_page_to_encoding.get(code_page, "unknown")
+        print(f"Idioma de la consola: {cmd_language} and encoder: {encoder}")
     except Exception as e:
         print(f"No se pudo obtener el idioma de la consola: {e}")
 
