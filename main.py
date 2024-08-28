@@ -1,9 +1,8 @@
 import asyncio
 from scapy.all import IP, ICMP, sr1, ARP, Ether, srp
 import ipaddress
-from ipaddress import IPv4Network
 
-from utils.db_manager import insert_data, update_deep_scan
+from utils.db_manager import insert_devices, update_deep_scan
 from utils.ipcfg import get_ipconfig_data
 
 def get_network_address(ip, netmask):
@@ -53,8 +52,6 @@ def scan_network(ip_range):
     print(f"Dispositivos online: {devices}")
     return devices
 
-
-
 if __name__=="__main__":
     ip_dict = get_ipconfig_data() #obtengo las ip del sistema
     ip_device = next(iter(ip_dict)) #me quedo con la del primer adaptador
@@ -63,6 +60,6 @@ if __name__=="__main__":
     #ip_net = IPv4Network(ip_net)
     #ip_range = ip_net.hosts()
     devices = scan_network(ip_net)
-    insert_data("db/mac_tables.db",devices)
-    update_deep_scan("db/mac_tables.db",devices)
+    insert_devices("db/devices.db",devices)
+    update_deep_scan("db/devices.db",devices)
     #asyncio.run(scan_ip(ip_range))
